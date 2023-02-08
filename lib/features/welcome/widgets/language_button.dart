@@ -62,6 +62,17 @@ class LanguageButton extends StatelessWidget {
                   'Amharic',
                   style: TextStyle(color: context.theme.greyColor),
                 ),
+              ),
+              RadioListTile(
+                value: true,
+                groupValue: false,
+                onChanged: (value) {},
+                activeColor: AppColors.greenDark,
+                title: const Text('Español'),
+                subtitle: Text(
+                  'Spanish',
+                  style: TextStyle(color: context.theme.greyColor),
+                ),
               )
             ],
           ),

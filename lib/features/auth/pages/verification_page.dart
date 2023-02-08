@@ -1,34 +1,22 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp_clone/common/extension/custom_theme_extension.dart';
 import 'package:whatsapp_clone/common/widgets/custom_icon_button.dart';
+import 'package:whatsapp_clone/features/auth/controller/auth_controller.dart';
 import 'package:whatsapp_clone/features/auth/widgets/custom_text_field.dart';
 
-class VerificationPage extends StatefulWidget {
-  const VerificationPage({super.key, required this.verificationId, required this.phoneNumber});
-  final String verificationId;
+class VerificationPage extends ConsumerWidget {
+  const VerificationPage({super.key, required this.smsCodeId, required this.phoneNumber});
+  final String smsCodeId;
   final String phoneNumber;
 
-  @override
-  State<VerificationPage> createState() => _VerificationPageState();
-}
-
-class _VerificationPageState extends State<VerificationPage> {
-  late TextEditingController codeController;
-
-  @override
-  void initState() {
-    codeController = TextEditingController();
-    super.initState();
+  void verifySmsCode(BuildContext context, WidgetRef ref, String smsCode) {
+    ref.read(authControllerProvider).verifySmsCode(
+        context: context, smsCodeId: smsCodeId, smsCode: smsCode, mounted: true);
   }
 
   @override
-  void dispose() {
-    codeController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).backgroundColor,
@@ -38,9 +26,7 @@ class _VerificationPageState extends State<VerificationPage> {
           style: TextStyle(color: context.theme.authAppbarTextColor),
         ),
         centerTitle: true,
-        actions: [
-          CustomIconButton(onTap: (() {}), icon: Icons.more_vert)
-        ],
+        actions: [CustomIconButton(onTap: (() {}), icon: Icons.more_vert)],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -51,16 +37,14 @@ class _VerificationPageState extends State<VerificationPage> {
               child: RichText(
                 textAlign: TextAlign.center,
                 text: TextSpan(
-                    style: TextStyle(
-                        color: context.theme.greyColor, height: 1.5),
+                    style: TextStyle(color: context.theme.greyColor, height: 1.5),
                     children: [
                       const TextSpan(
                           text:
                               "You've tried to register +1234567890, before requesting an SMS or call with your code. "),
                       TextSpan(
                           text: 'Wrong number?',
-                          style: TextStyle(
-                              color: context.theme.blueColor))
+                          style: TextStyle(color: context.theme.blueColor))
                     ]),
               ),
             ),
@@ -68,12 +52,15 @@ class _VerificationPageState extends State<VerificationPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 80),
               child: CustomTextField(
-                controller: codeController,
                 hintText: '- - - - - -',
                 fontSize: 40,
                 autoFocus: true,
                 keyboardType: TextInputType.number,
-                onChanged: (value) {},
+                onChanged: (smsCode) {
+                  if (smsCode.length == 6) {
+                    return verifySmsCode(context, ref, smsCode);
+                  }
+                },
               ),
             ),
             const SizedBox(height: 20),

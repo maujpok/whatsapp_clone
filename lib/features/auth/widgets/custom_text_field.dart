@@ -33,6 +33,7 @@ class CustomTextField extends StatelessWidget {
   Widget build(BuildContext context) {
     return TextFormField(
       onTap: onTap,
+      onFieldSubmitted: (value) => FocusManager.instance.primaryFocus?.unfocus(),
       controller: controller,
       readOnly: readOnly ?? false,
       textAlign: textAlign ?? TextAlign.center,
