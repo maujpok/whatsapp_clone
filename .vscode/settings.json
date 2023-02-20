@@ -1,4 +1,4 @@
 {
   "cmake.sourceDirectory": "${workspaceFolder}/windows/runner",
-  "dart.lineLength": 90
+  "dart.lineLength": 100
 }

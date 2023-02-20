@@ -1,6 +1,14 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_clone/common/extension/custom_theme_extension.dart';
+import 'package:whatsapp_clone/common/helper/show_alert_dialog.dart';
+import 'package:whatsapp_clone/common/utils/app_colors.dart';
 import 'package:whatsapp_clone/common/widgets/custom_elevated_button.dart';
+import 'package:whatsapp_clone/common/widgets/custom_icon_button.dart';
+import 'package:whatsapp_clone/common/widgets/short_h_bar.dart';
+import 'package:whatsapp_clone/features/auth/pages/image_picker_page.dart';
 import 'package:whatsapp_clone/features/auth/widgets/custom_text_field.dart';
 
 class UserInfoPage extends StatefulWidget {
@@ -11,6 +19,108 @@ class UserInfoPage extends StatefulWidget {
 }
 
 class _UserInfoPageState extends State<UserInfoPage> {
+  File? imageCamera;
+  Uint8List? imageGallery;
+
+  imagePickerTypeBottomSheet() {
+    return showModalBottomSheet(
+      context: context,
+      builder: (context) {
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const ShortHBar(),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                ),
+                const Text(
+                  'Profile photo',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
+                ),
+                const Spacer(),
+                CustomIconButton(onTap: () => Navigator.pop(context), icon: Icons.close),
+                const SizedBox(
+                  width: 15,
+                ),
+              ],
+            ),
+            Divider(
+              color: context.theme.greyColor!.withOpacity(0.3),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                ),
+                imagePickerIcon(
+                    onTap: pickImageFromCamera, icon: Icons.camera_alt_rounded, text: 'Camera'),
+                const SizedBox(
+                  width: 15,
+                ),
+                imagePickerIcon(
+                    onTap: () async {
+                      Navigator.pop(context);
+                      final image = await Navigator.of(context).push(MaterialPageRoute(
+                        builder: (context) => const ImagePickerPage(),
+                      ));
+                      if (image == null) return;
+                      setState(() {
+                        imageGallery = image;
+                        imageCamera = null;
+                      });
+                    },
+                    icon: Icons.photo_camera_back_rounded,
+                    text: 'Gallery')
+              ],
+            ),
+            const SizedBox(
+              height: 15,
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  imagePickerIcon({required VoidCallback onTap, required IconData icon, required String text}) {
+    return Column(
+      children: [
+        CustomIconButton(
+          onTap: onTap,
+          icon: icon,
+          iconColor: AppColors.greenDark,
+          minWidth: 50,
+          border: Border.all(color: context.theme.greyColor!.withOpacity(0.2), width: 1),
+        ),
+        const SizedBox(
+          height: 5,
+        ),
+        Text(
+          text,
+          style: TextStyle(color: context.theme.greyColor),
+        )
+      ],
+    );
+  }
+
+  pickImageFromCamera() async {
+    Navigator.pop(context);
+    try {
+      final image = await ImagePicker().pickImage(source: ImageSource.camera);
+      setState(() {
+        imageCamera = File(image!.path);
+        imageGallery = null;
+      });
+    } catch (e) {
+      showAlertDialog(context: context, message: e.toString());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -33,19 +143,35 @@ class _UserInfoPageState extends State<UserInfoPage> {
               style: TextStyle(color: context.theme.greyColor),
             ),
             const SizedBox(height: 40),
-            Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: context.theme.photoIconBgColor),
-                child: Padding(
-                  padding: const EdgeInsets.only(bottom: 3, right: 3),
-                  child: Icon(
-                    Icons.add_a_photo_rounded,
-                    size: 30,
-                    color: context.theme.photoIconColor,
-                  ),
-                )),
+            GestureDetector(
+              onTap: imagePickerTypeBottomSheet,
+              child: Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: context.theme.photoIconBgColor,
+                      border: Border.all(
+                          color: imageCamera == null && imageGallery == null
+                              ? Colors.transparent
+                              : context.theme.greyColor!.withOpacity(0.4)),
+                      image: imageCamera != null || imageGallery != null
+                          ? DecorationImage(
+                              fit: BoxFit.cover,
+                              image: imageGallery != null
+                                  ? MemoryImage(imageGallery!) as ImageProvider
+                                  : FileImage(imageCamera!))
+                          : null),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 3, right: 3),
+                    child: Icon(
+                      Icons.add_a_photo_rounded,
+                      size: 30,
+                      color: imageCamera == null && imageGallery == null
+                          ? context.theme.photoIconColor
+                          : Colors.transparent,
+                    ),
+                  )),
+            ),
             const SizedBox(height: 40),
             Row(
               children: [
@@ -68,8 +194,7 @@ class _UserInfoPageState extends State<UserInfoPage> {
           ],
         ),
       ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: CustomElevatedButton(
         onPressed: () {},
         text: "NEXT",
