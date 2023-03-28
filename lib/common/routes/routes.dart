@@ -15,9 +15,11 @@ class Routes {
   static Route<dynamic> onGenerateRoute(RouteSettings settings) {
     switch (settings.name) {
       case welcome:
-        return MaterialPageRoute(builder: (context) => const WelcomePage());
+        return MaterialPageRoute(
+            builder: (context) => const WelcomePage());
       case login:
-        return MaterialPageRoute(builder: (context) => const LoginPage());
+        return MaterialPageRoute(
+            builder: (context) => const LoginPage());
       case verification:
         final Map args = settings.arguments as Map;
         return MaterialPageRoute(
@@ -26,9 +28,14 @@ class Routes {
                   phoneNumber: args['phoneNumber'],
                 ));
       case userInfo:
-        return MaterialPageRoute(builder: (context) => const UserInfoPage());
+        final String? profileImageUrl = settings.arguments as String?;
+        return MaterialPageRoute(
+            builder: (context) => UserInfoPage(
+                  profileImageUrl: profileImageUrl,
+                ));
       case home:
-        return MaterialPageRoute(builder: (context) => const HomePage());
+        return MaterialPageRoute(
+            builder: (context) => const HomePage());
       default:
         return MaterialPageRoute(
             builder: (context) => const Scaffold(

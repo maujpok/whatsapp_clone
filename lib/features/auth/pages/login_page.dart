@@ -2,7 +2,7 @@ import 'package:country_picker/country_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:whatsapp_clone/common/extension/custom_theme_extension.dart';
-import 'package:whatsapp_clone/common/helper/show_alert_dialog.dart';
+import 'package:whatsapp_clone/common/helpers/show_alert_dialog.dart';
 import 'package:whatsapp_clone/common/utils/app_colors.dart';
 import 'package:whatsapp_clone/common/widgets/custom_elevated_button.dart';
 import 'package:whatsapp_clone/common/widgets/custom_icon_button.dart';

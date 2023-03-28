@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:whatsapp_clone/common/extension/custom_theme_extension.dart';
-import 'package:whatsapp_clone/common/helper/show_alert_dialog.dart';
+import 'package:whatsapp_clone/common/helpers/show_alert_dialog.dart';
 import 'package:whatsapp_clone/common/utils/app_colors.dart';
 import 'package:whatsapp_clone/common/widgets/custom_elevated_button.dart';
 import 'package:whatsapp_clone/common/widgets/custom_icon_button.dart';
@@ -14,7 +14,8 @@ import 'package:whatsapp_clone/features/auth/pages/image_picker_page.dart';
 import 'package:whatsapp_clone/features/auth/widgets/custom_text_field.dart';
 
 class UserInfoPage extends ConsumerStatefulWidget {
-  const UserInfoPage({super.key});
+  const UserInfoPage({super.key, this.profileImageUrl});
+  final String? profileImageUrl;
 
   @override
   ConsumerState<UserInfoPage> createState() => _UserInfoPageState();
@@ -35,6 +36,21 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
   void dispose() {
     usernameController.dispose();
     super.dispose();
+  }
+
+  saveUserDataToFirebase() {
+    String username = usernameController.text;
+    if (username.isEmpty) {
+      return showAlertDialog(context: context, message: 'Please provide a username');
+    } else if (username.length < 3 || username.length > 20) {
+      return showAlertDialog(
+          context: context, message: 'Username length should be between 3-20 digits.');
+    }
+    ref.read(authControllerProvider).saveUserInfoToFirestore(
+        username: username,
+        profileImage: imageCamera ?? imageGallery ?? widget.profileImageUrl ?? "",
+        context: context,
+        mounted: mounted);
   }
 
   @override
@@ -67,30 +83,30 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
                       shape: BoxShape.circle,
                       color: context.theme.photoIconBgColor,
                       border: Border.all(
-                          color: imageCamera == null &&
-                                  imageGallery == null
+                          color: imageCamera == null && imageGallery == null
                               ? Colors.transparent
-                              : context.theme.greyColor!
-                                  .withOpacity(0.4)),
-                      image:
-                          imageCamera != null || imageGallery != null
-                              ? DecorationImage(
-                                  fit: BoxFit.cover,
-                                  image: imageGallery != null
-                                      ? MemoryImage(imageGallery!)
-                                          as ImageProvider
-                                      : FileImage(imageCamera!))
-                              : null),
+                              : context.theme.greyColor!.withOpacity(0.4)),
+                      image: imageCamera != null ||
+                              imageGallery != null ||
+                              widget.profileImageUrl != null
+                          ? DecorationImage(
+                              fit: BoxFit.cover,
+                              image: imageGallery != null
+                                  ? MemoryImage(imageGallery!)
+                                  : widget.profileImageUrl != null
+                                      ? NetworkImage(widget.profileImageUrl!)
+                                      : FileImage(imageCamera!) as ImageProvider)
+                          : null),
                   child: Padding(
-                    padding:
-                        const EdgeInsets.only(bottom: 3, right: 3),
+                    padding: const EdgeInsets.only(bottom: 3, right: 3),
                     child: Icon(
                       Icons.add_a_photo_rounded,
                       size: 30,
-                      color:
-                          imageCamera == null && imageGallery == null
-                              ? context.theme.photoIconColor
-                              : Colors.transparent,
+                      color: imageCamera == null &&
+                              imageGallery == null &&
+                              widget.profileImageUrl == null
+                          ? context.theme.photoIconColor
+                          : Colors.transparent,
                     ),
                   )),
             ),
@@ -117,31 +133,13 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
           ],
         ),
       ),
-      floatingActionButtonLocation:
-          FloatingActionButtonLocation.centerFloat,
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: CustomElevatedButton(
         onPressed: saveUserDataToFirebase,
         text: "NEXT",
         buttonWidth: 90,
       ),
     );
-  }
-
-  saveUserDataToFirebase() {
-    String username = usernameController.text;
-    if (username.isEmpty) {
-      return showAlertDialog(
-          context: context, message: 'Please provide a username');
-    } else if (username.length < 3 || username.length > 20) {
-      return showAlertDialog(
-          context: context,
-          message: 'Username length should be between 3-20 digits.');
-    }
-    ref.read(authControllerProvider).saveUserInfoToFirestore(
-        username: username,
-        profileImage: imageCamera ?? imageGallery ?? '',
-        context: context,
-        mounted: mounted);
   }
 
   imagePickerTypeBottomSheet() {
@@ -159,13 +157,10 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
                 ),
                 const Text(
                   'Profile photo',
-                  style: TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.w500),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w500),
                 ),
                 const Spacer(),
-                CustomIconButton(
-                    onTap: () => Navigator.pop(context),
-                    icon: Icons.close),
+                CustomIconButton(onTap: () => Navigator.pop(context), icon: Icons.close),
                 const SizedBox(
                   width: 15,
                 ),
@@ -192,8 +187,7 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
                 imagePickerIcon(
                     onTap: () async {
                       Navigator.pop(context);
-                      final image = await Navigator.of(context)
-                          .push(MaterialPageRoute(
+                      final image = await Navigator.of(context).push(MaterialPageRoute(
                         builder: (context) => const ImagePickerPage(),
                       ));
                       if (image == null) return;
@@ -216,9 +210,7 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
   }
 
   imagePickerIcon(
-      {required VoidCallback onTap,
-      required IconData icon,
-      required String text}) {
+      {required VoidCallback onTap, required IconData icon, required String text}) {
     return Column(
       children: [
         CustomIconButton(
@@ -226,9 +218,7 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
           icon: icon,
           iconColor: AppColors.greenDark,
           minWidth: 50,
-          border: Border.all(
-              color: context.theme.greyColor!.withOpacity(0.2),
-              width: 1),
+          border: Border.all(color: context.theme.greyColor!.withOpacity(0.2), width: 1),
         ),
         const SizedBox(
           height: 5,
@@ -244,8 +234,7 @@ class _UserInfoPageState extends ConsumerState<UserInfoPage> {
   pickImageFromCamera() async {
     Navigator.pop(context);
     try {
-      final image =
-          await ImagePicker().pickImage(source: ImageSource.camera);
+      final image = await ImagePicker().pickImage(source: ImageSource.camera);
       setState(() {
         imageCamera = File(image!.path);
         imageGallery = null;
