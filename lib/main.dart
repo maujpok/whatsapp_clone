@@ -11,7 +11,8 @@ import 'package:whatsapp_clone/firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform);
   runApp(const ProviderScope(child: MyApp()));
 }
 
@@ -40,7 +41,8 @@ class MyApp extends ConsumerWidget {
             );
           }), loading: () {
             return const Scaffold(
-              body: Center(child: Icon(Icons.whatsapp, size: 30)),
+              // body: Center(child: Icon(Icons.whatsapp, size: 30)),
+              body: Center(child: Icon(Icons.abc, size: 30)),
             );
           })),
     );
